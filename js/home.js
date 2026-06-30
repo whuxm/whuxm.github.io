@@ -95,9 +95,74 @@
     }
   }
 
+  /* ---------- 首屏滚动吸附（hero ↔ sections） ----------
+     取消首页自由滑动：向下滑动直接平滑过渡到第二屏；
+     在第二屏顶部向上滑动回到首屏。尊重 prefers-reduced-motion。
+     - wheel/touch/键盘 三种触发方式
+     - 900ms 锁防止触控板惯性重复触发
+     - 搜索面板打开时不接管，避免干扰 */
+  function bindHeroScrollSnap() {
+    const hero = document.querySelector('.hero');
+    const sections = document.getElementById('sections');
+    if (!hero || !sections) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // sections 顶部在文档中的绝对 Y（约等于一屏高度）
+    const sectionsTop = () => sections.getBoundingClientRect().top + window.scrollY;
+    let locked = false;
+    const lock = (ms) => {
+      locked = true;
+      setTimeout(() => { locked = false; }, ms);
+    };
+    const goSections = () => { window.scrollTo({ top: sectionsTop(), behavior: 'smooth' }); lock(900); };
+    const goHero = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); lock(900); };
+    const searchOpen = () => !!(window.RS_SEARCH && window.RS_SEARCH.isOpen);
+
+    // 滚轮
+    window.addEventListener('wheel', (e) => {
+      if (locked || searchOpen()) return;
+      const y = window.scrollY;
+      const top = sectionsTop();
+      if (e.deltaY > 8 && y < top - 60) { e.preventDefault(); goSections(); }
+      else if (e.deltaY < -8 && y < top + 60 && y > 30) { e.preventDefault(); goHero(); }
+    }, { passive: false });
+
+    // 触摸：上滑=向下翻，下滑=向上翻
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchend', (e) => {
+      if (locked || searchOpen()) return;
+      const dy = touchStartY - e.changedTouches[0].clientY;
+      const y = window.scrollY;
+      const top = sectionsTop();
+      if (dy > 50 && y < top - 60) { goSections(); }
+      else if (dy < -50 && y < top + 60 && y > 30) { goHero(); }
+    }, { passive: true });
+
+    // 键盘
+    document.addEventListener('keydown', (e) => {
+      if (locked || searchOpen()) return;
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const y = window.scrollY;
+      const top = sectionsTop();
+      if ((e.key === 'ArrowDown' || e.key === 'PageDown') && y < top - 60) { e.preventDefault(); goSections(); }
+      else if ((e.key === 'ArrowUp' || e.key === 'PageUp') && y < top + 60 && y > 30) { e.preventDefault(); goHero(); }
+    });
+
+    // 拦截 .hero__scroll 锚点，保证平滑一致（不依赖全局 scroll-behavior）
+    document.querySelectorAll('a[href="#sections"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!locked) goSections();
+      });
+    });
+  }
+
   function init() {
     applyHeroBackground();   // 先注入背景图，再做入场动画
     heroIntro();
+    bindHeroScrollSnap();    // 首屏滚动吸附
     if (window.RS) RS.observeReveals();
     loadPreviews();
   }

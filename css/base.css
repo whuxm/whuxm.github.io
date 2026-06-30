@@ -25,10 +25,16 @@ body {
   position: relative;
   background-color: var(--bg);
   /* 微妙的纵向渐变与两端柔光，增加质感；颜色随主题变量切换 */
+  /* 背景图片层（将图片放在 assets/background.jpg）
+     图像放在最上层，后面保留现有渐变与噪点叠加以保留设计质感 */
   background-image:
+    url("../assets/background.jpg"),
     radial-gradient(ellipse 110% 70% at 50% 0%, color-mix(in srgb, var(--fg) 4.5%, transparent), transparent 60%),
     radial-gradient(ellipse 90% 60% at 50% 100%, color-mix(in srgb, var(--fg) 2.5%, transparent), transparent 65%),
     linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg) 100%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
   transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
 }

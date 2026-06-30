@@ -90,7 +90,8 @@
       this.el.classList.remove('is-open');
       document.body.style.overflow = '';
       if (this.input) this.input.value = '';
-      if (this.results) this.results.innerHTML = '';
+      // [MODIFIED] 延迟清空结果，让面板有时间淡出（与 CSS 0.3s 过渡匹配）
+      setTimeout(() => { if (!this.isOpen && this.results) this.results.innerHTML = ''; }, 320);
     },
 
     filter(query) {

@@ -231,9 +231,19 @@
   border-top: none;
   max-height: 60vh;
   overflow-y: auto;
-  display: none;
+  /* [MODIFIED] 由 display 切换改为 opacity/transform/visibility 过渡，
+     开启时比顶栏晚 0.15s 淡入下滑，关闭时立即淡出，过渡更流畅。 */
+  opacity: 0;
+  transform: translateY(-8px);
+  visibility: hidden;
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), visibility 0s linear 0.3s;
 }
-.search.is-open .search__results { display: block; }
+.search.is-open .search__results {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition: opacity 0.3s var(--ease) 0.15s, transform 0.3s var(--ease) 0.15s, visibility 0s;
+}
 .search__group { padding: 14px 0; border-bottom: 1px solid var(--border); }
 .search__group:last-child { border-bottom: none; }
 .search__group-label {

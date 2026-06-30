@@ -1,0 +1,65 @@
+/* ============================================================
+   RS NOTES · warpParticles.css
+   中心爆发式粒子动效（warp speed starfield）样式
+   ------------------------------------------------------------
+   [MODIFIED] 重写：画布与按钮均挂载到 .hero 内（仅首页第一屏）。
+   通过 .hero.is-warp 类在「Three.js 粒子网络」与「跃迁粒子」之间切换。
+   ============================================================ */
+
+/* ---------- 跃迁粒子画布（与 #particles-canvas 同层 z-index:1） ---------- */
+.warp-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease, ease);
+}
+.hero.is-warp .warp-canvas { opacity: 1; }
+
+/* ---------- 原粒子网络在 warp 模式下淡出（仅 index 加载，安全） ---------- */
+#particles-canvas { transition: opacity 0.8s var(--ease, ease); }
+.hero.is-warp #particles-canvas { opacity: 0; }
+
+/* ---------- 动效切换按钮（位于 .hero 内右下，与 .hero__scroll 同高对称） ---------- */
+.warp-toggle {
+  position: absolute;
+  bottom: 36px;
+  right: 32px;
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: color var(--dur, 0.4s) var(--ease, ease),
+              border-color var(--dur, 0.4s) var(--ease, ease),
+              background var(--dur, 0.4s) var(--ease, ease);
+}
+.warp-toggle:hover {
+  color: var(--fg);
+  border-color: var(--border-bright);
+}
+.warp-toggle.is-active {
+  color: var(--fg);
+  border-color: var(--border-bright);
+}
+.warp-toggle svg { width: 18px; height: 18px; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 600px) {
+  .warp-toggle { bottom: 16px; right: 16px; }
+}
+
+/* ---------- 无障碍：尊重减少动效偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .warp-canvas { display: none !important; }
+  .warp-toggle { display: none; }
+}

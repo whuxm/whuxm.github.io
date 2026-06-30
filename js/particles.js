@@ -21,9 +21,26 @@
   const COUNT = isMobile ? (cfg.countMobile || 26) : (cfg.count || 80);
   // 【连线距离】归一化 0~1，0=无连线，越大连线越密（移动端默认关闭连线）
   const LINK_NORM = isMobile ? 0 : (cfg.linkDistance != null ? cfg.linkDistance : 0.13);
-  const PARTICLE_COLOR = new THREE.Color(cfg.color || '#ffffff');
   const PARTICLE_SIZE = cfg.size || 2.4;
   const PARTICLE_OPACITY = cfg.opacity != null ? cfg.opacity : 0.85;
+
+  /* ---------- 粒子颜色随主题切换 ---------- */
+  const THEME_DARK_COLOR  = new THREE.Color(cfg.color || '#ffffff');   // 深色主题粒子色
+  const THEME_LIGHT_COLOR = new THREE.Color(cfg.colorLight || '#111111'); // 浅色主题粒子色
+  const THEME_DARK_LINE   = THEME_DARK_COLOR;
+  const THEME_LIGHT_LINE  = THEME_LIGHT_COLOR;
+
+  function getThemeColor() {
+    return document.documentElement.dataset.theme === 'light'
+      ? THEME_LIGHT_COLOR
+      : THEME_DARK_COLOR;
+  }
+
+  function getThemeLineColor() {
+    return document.documentElement.dataset.theme === 'light'
+      ? THEME_LIGHT_LINE
+      : THEME_DARK_LINE;
+  }
 
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -50,13 +67,29 @@
   const positions = new Float32Array(COUNT * 3);
   const pGeo = new THREE.BufferGeometry();
   pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  // 生成圆形粒子贴图（避免默认方形粒子）
+  const particleCanvas = document.createElement('canvas');
+  particleCanvas.width = 32;
+  particleCanvas.height = 32;
+  const ctx = particleCanvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.3, 'rgba(255,255,255,0.9)');
+  gradient.addColorStop(0.7, 'rgba(255,255,255,0.2)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 32, 32);
+  const particleTexture = new THREE.CanvasTexture(particleCanvas);
+
   const pMat = new THREE.PointsMaterial({
-    color: PARTICLE_COLOR,
+    map: particleTexture,
+    color: getThemeColor(),
     size: isMobile ? PARTICLE_SIZE + 0.4 : PARTICLE_SIZE,
     transparent: true,
     opacity: PARTICLE_OPACITY,
     sizeAttenuation: true,
-    depthWrite: false
+    depthWrite: false,
+    blending: THREE.NormalBlending
   });
   const points = new THREE.Points(pGeo, pMat);
   scene.add(points);
@@ -85,7 +118,7 @@
     const linePositions = new Float32Array(maxLinks * 6);
     lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
     const lineMat = new THREE.LineBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: 0.15, depthWrite: false
+      color: getThemeLineColor(), transparent: true, opacity: 0.15, depthWrite: false
     });
     lineSeg = new THREE.LineSegments(lineGeo, lineMat);
     scene.add(lineSeg);
@@ -164,4 +197,12 @@
     clearTimeout(resizeT);
     resizeT = setTimeout(resize, 150);
   });
+
+  /* ---------- 主题切换：粒子 & 连线颜色跟随 ---------- */
+  const themeObserver = new MutationObserver(() => {
+    const c = getThemeColor();
+    pMat.color.set(c);
+    if (lineSeg) lineSeg.material.color.set(getThemeLineColor());
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
