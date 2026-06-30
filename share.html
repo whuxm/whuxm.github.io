@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rs-theme') || 'dark';</script>
+  <title>Share · RS NOTES</title>
+  <meta name="description" content="经验与动态分享 —— 时间轴 + 图片瀑布流。" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/markdown.css" />
+
+  <script src="config/site.config.js"></script>
+</head>
+<body>
+
+  <header class="nav" data-nav></header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head reveal">
+        <span class="eyebrow">03 / Share</span>
+        <h1>分享与动态</h1>
+        <p>时间轴记录日常动态，图片瀑布流展示瞬间。点击图片查看大图。</p>
+      </div>
+
+      <div class="share-layout">
+        <input class="share-search" type="text" id="shareSearch" placeholder="搜索动态标题或内容…" />
+
+        <div class="timeline" data-timeline>
+          <div class="state-empty"><p>加载中…</p></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 灯箱 -->
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox__close" id="lightboxClose">×</span>
+    <img id="lightboxImg" src="" alt="preview" />
+    <div class="lightbox__caption" id="lightboxCaption"></div>
+  </div>
+
+  <footer class="footer" data-footer></footer>
+
+  <script src="js/utils.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/share.js"></script>
+</body>
+</html>

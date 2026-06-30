@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rs-theme') || 'dark';</script>
+  <title>Research · RS NOTES</title>
+  <meta name="description" content="科研项目墙 —— 研究项目展示与归档。" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/markdown.css" />
+
+  <script src="config/site.config.js"></script>
+</head>
+<body>
+
+  <header class="nav" data-nav></header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head reveal">
+        <span class="eyebrow">01 / Research</span>
+        <h1>科研项目墙</h1>
+        <p>正在进行与已完成的研究项目，按状态分类，附标签与摘要。点击卡片查看完整内容。</p>
+      </div>
+
+      <div class="research__filters" data-filters>
+        <button class="tag is-active" data-filter="all">全部</button>
+        <button class="tag" data-filter="ongoing">进行中</button>
+        <button class="tag" data-filter="completed">已完成</button>
+        <button class="tag" data-filter="planning">规划中</button>
+      </div>
+
+      <div class="grid grid-3" data-research-grid>
+        <div class="state-empty"><p>加载中…</p></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" data-footer></footer>
+
+  <script src="js/utils.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/research.js"></script>
+</body>
+</html>

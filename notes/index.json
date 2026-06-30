@@ -1,0 +1,36 @@
+{
+  "notes": [
+    {
+      "id": "welcome-to-rs-notes",
+      "title": "欢迎来到 RS NOTES",
+      "file": "welcome-to-rs-notes.md",
+      "date": "2026-06-28",
+      "tags": ["about", "guide"],
+      "summary": "RS NOTES 是一个面向科研与开发者的个人知识库 —— 介绍它的设计理念与三大模块。"
+    },
+    {
+      "id": "threejs-particle-network",
+      "title": "用 Three.js 构建粒子网络背景",
+      "file": "threejs-particle-network.md",
+      "date": "2026-06-20",
+      "tags": ["three.js", "webgl", "frontend"],
+      "summary": "从零实现一个轻量级的黑底白点粒子网络背景：粒子漂移、近距离连线、鼠标视差与性能降级。"
+    },
+    {
+      "id": "katex-math-rendering",
+      "title": "KaTeX 数学公式渲染速查",
+      "file": "katex-math-rendering.md",
+      "date": "2026-06-12",
+      "tags": ["katex", "math", "guide"],
+      "summary": "行内公式、块级公式、常用符号与矩阵的 KaTeX 写法示例，配合 auto-render 自动识别。"
+    },
+    {
+      "id": "reading-stats-design",
+      "title": "笔记阅读统计系统的设计",
+      "file": "reading-stats-design.md",
+      "date": "2026-06-05",
+      "tags": ["design", "frontend"],
+      "summary": "基于 LocalStorage 的阅读次数记录与 200 字/分钟的阅读时长估算实现思路。"
+    }
+  ]
+}
