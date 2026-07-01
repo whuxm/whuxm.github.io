@@ -36,7 +36,7 @@ window.SITE_CONFIG = {
        可替换为任意图片 URL；留空 '' 则使用纯渐变背景。
        透明度/模糊/遮罩用于保证 hero 文字始终可读。 */
     background: {
-      image: 'assets/background.png',  // 【可改】背景图 URL，如 'https://example.com/bg.jpg'；留空用渐变
+      image: 'assets/background1.png',  // 【可改】背景图 URL，如 'https://example.com/bg.jpg'；留空用渐变
       opacity: 0.35,       // 【可改】背景图透明度 0~1（越小越淡，建议 0.2~0.5）
       blur: 0,             // 【可改】背景图模糊半径 px（0=清晰，4=轻微模糊）
       overlay: true        // 【可改】是否叠加暗色遮罩（true 时浅色图也能保证文字可读）

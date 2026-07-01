@@ -127,6 +127,7 @@
   position: relative;
   z-index: 2;
   background: var(--bg);
+  padding-top: var(--waves-height); /* 保留波浪高度，避免内容收缩 */
 }
 
 /* ---------- 第二屏波动线条装饰 ----------
@@ -134,27 +135,30 @@
    颜色继承 .sections 的 currentColor，随主题联动。 */
 .waves {
   position: relative;
+  top: var(--waves-offset);
+  left: 0;
   width: 100%;
-  height: 90px;                 /* 【可改】波浪区域高度 */
+  --waves-height: 100px;          /* 【可改】波浪区域高度 */
+  --waves-offset: 20px;         /* 【可改】波浪上下偏移，负值向上、正值向下 */
+  height: var(--waves-height);
   overflow: hidden;
   color: var(--fg-muted);       /* 【可改】波浪线条颜色 */
   pointer-events: none;
-  margin-top: -1px;             /* 消除与 hero 的接缝 */
 }
 .waves__svg {
   width: 100%;
   height: 100%;
   display: block;
 }
-.wave-path--1 { opacity: 0.38; }  /* 【可改】第一层透明度（最显著） */
-.wave-path--2 { opacity: 0.22; }  /* 【可改】第二层透明度 */
-.wave-path--3 { opacity: 0.14; }  /* 【可改】第三层透明度（最隐约） */
+.wave-path--1 { opacity: 0.98; }  /* 【可改】第一层透明度（最显著） */
+.wave-path--2 { opacity: 0.50; }  /* 【可改】第二层透明度 */
+.wave-path--3 { opacity: 0.25; }  /* 【可改】第三层透明度（最隐约） */
 @media (prefers-reduced-motion: reduce) {
   .waves { display: none; }       /* 尊重无障碍偏好，关闭动效时隐藏波浪 */
 }
 
 .sections__head {
-  padding: 64px 0 48px;          /* 顶部留白已由波浪承担，适当减小 */
+  padding: 20px 0 40px;          /* 第二屏头部边距 */
 }
 .sections__head h2 { max-width: 18ch; }
 
