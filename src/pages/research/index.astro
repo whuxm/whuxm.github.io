@@ -1,0 +1,56 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+
+const research = (await getCollection('research')).sort(
+  (a, b) => (b.data.date || '').localeCompare(a.data.date || '')
+);
+---
+<BaseLayout title="Research · RS NOTES" description="科研项目墙 —— 研究项目展示与归档。">
+  <main class="page">
+    <div class="container">
+      <div class="page-head reveal">
+        <span class="eyebrow">01 / Research</span>
+        <h1>科研项目墙</h1>
+        <p>正在进行与已完成的研究项目，按状态分类，附标签与摘要。点击卡片查看完整内容。</p>
+      </div>
+
+      <div class="research__filters" data-filters>
+        <button class="tag is-active" data-filter="all">全部</button>
+        <button class="tag" data-filter="ongoing">进行中</button>
+        <button class="tag" data-filter="completed">已完成</button>
+        <button class="tag" data-filter="planning">规划中</button>
+      </div>
+
+      <div class="grid grid-3" data-research-grid>
+        {research.map(entry => (
+          <div data-status={entry.data.status}>
+            <ProjectCard project={entry} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  const filters = document.querySelector('[data-filters]');
+  const grid = document.querySelector('[data-research-grid]');
+  if (filters && grid) {
+    filters.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-filter]');
+      if (!btn) return;
+      filters.querySelectorAll('.tag').forEach(t => t.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      const filter = btn.dataset.filter;
+      grid.querySelectorAll<HTMLElement>('[data-status]').forEach(card => {
+        if (filter === 'all' || card.dataset.status === filter) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  }
+</script>

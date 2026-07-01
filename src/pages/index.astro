@@ -1,0 +1,207 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroParticles from '../components/HeroParticles.astro';
+import { home } from '../config/home';
+
+const [research, notes, share] = await Promise.all([
+  getCollection('research'),
+  getCollection('notes'),
+  getCollection('share')
+]);
+
+const sortByDate = (a: any, b: any) => (b.data.date || '').localeCompare(a.data.date || '');
+
+const researchPreview = [...research].sort(sortByDate).slice(0, 2);
+const notesPreview = [...notes].sort(sortByDate).slice(0, 2);
+const sharePreview = [...share].sort(sortByDate).slice(0, 2);
+
+const bg = home.background;
+---
+<BaseLayout title="RS NOTES - Research · Notes · Share">
+  <section class="hero">
+    <HeroParticles />
+    {bg.image && <div class="hero__bg-img" style={`background-image:url('${bg.image}');opacity:${bg.opacity};${bg.blur ? `filter:blur(${bg.blur}px)` : ''}`} aria-hidden="true"></div>}
+    {bg.image && bg.overlay && <div class="hero__bg-overlay" aria-hidden="true"></div>}
+    <div class="hero__inner">
+      <div class="hero__avatar" data-hero-avatar>
+        <img src="/avatar.svg" alt="avatar" />
+      </div>
+      <div class="hero__eyebrow" data-hero-eyebrow>RS NOTES</div>
+      <h1 class="hero__title" data-hero-title>
+        在黑白之间，<br /><em>沉淀科研与代码。</em>
+      </h1>
+      <p class="hero__tagline" data-hero-tagline>
+        {home.tagline}
+      </p>
+      <div class="hero__cta" data-hero-cta>
+        <a class="btn" href="#sections">探索内容</a>
+        <a class="btn btn--ghost" href="/notes">阅读笔记</a>
+      </div>
+    </div>
+    <a class="hero__scroll" href="#sections" aria-label="向下滚动">
+      <span>Scroll</span>
+      <span class="hero__scroll-line"></span>
+    </a>
+  </section>
+
+  <section class="sections" id="sections">
+    <div class="waves" aria-hidden="true">
+      <svg class="waves__svg" viewBox="0 0 1440 90" preserveAspectRatio="none">
+        <g class="waves__layer">
+          <path class="wave-path wave-path--1" d="M-720,45 Q-540,8 -360,45 T0,45 T360,45 T720,45 T1080,45 T1440,45 T1800,45 T2160,45 T2520,45 T2880,45" fill="none" stroke="currentColor" stroke-width="1.3" vector-effect="non-scaling-stroke"/>
+          <animateTransform attributeName="transform" type="translate" from="0 0" to="-720 0" dur="15s" repeatCount="indefinite"/>
+        </g>
+        <g class="waves__layer">
+          <path class="wave-path wave-path--2" d="M-720,45 Q-540,22 -360,45 T0,45 T360,45 T720,45 T1080,45 T1440,45 T1800,45 T2160,45 T2520,45 T2880,45" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/>
+          <animateTransform attributeName="transform" type="translate" from="0 0" to="720 0" dur="22s" repeatCount="indefinite"/>
+        </g>
+        <g class="waves__layer">
+          <path class="wave-path wave-path--3" d="M-720,45 Q-540,32 -360,45 T0,45 T360,45 T720,45 T1080,45 T1440,45 T1800,45 T2160,45 T2520,45 T2880,45" fill="none" stroke="currentColor" stroke-width="0.8" vector-effect="non-scaling-stroke"/>
+          <animateTransform attributeName="transform" type="translate" from="0 0" to="-720 0" dur="30s" repeatCount="indefinite"/>
+        </g>
+      </svg>
+    </div>
+    <div class="container">
+      <div class="sections__head reveal">
+        <span class="eyebrow">Three Pillars</span>
+        <h2>知识的三种形态：研究、笔记、与分享。</h2>
+      </div>
+
+      <div class="grid grid-3">
+        <a class="entry reveal" href="/research">
+          <span class="entry__index">01 / Research</span>
+          <div class="entry__title">Research <span class="entry__arrow">↗</span></div>
+          <p class="entry__desc">科研成果与项目墙 —— 记录正在进行与已完成的研究，附标签、状态与摘要。</p>
+          <div class="entry__preview">
+            {researchPreview.map(p => (
+              <div class="entry__preview-row">
+                <span>{p.data.title}</span>
+                <span>{p.data.date} · {p.data.status.toUpperCase()}</span>
+              </div>
+            ))}
+            {researchPreview.length === 0 && <div class="entry__preview-row"><span>暂无项目</span><span>—</span></div>}
+          </div>
+        </a>
+
+        <a class="entry reveal" href="/notes">
+          <span class="entry__index">02 / Notes</span>
+          <div class="entry__title">Notes <span class="entry__arrow">↗</span></div>
+          <p class="entry__desc">技术沉淀与知识笔记 —— Markdown、数学公式、代码高亮，支持标签与搜索。</p>
+          <div class="entry__preview">
+            {notesPreview.map(n => (
+              <div class="entry__preview-row">
+                <span>{n.data.title}</span>
+                <span data-note-views={n.slug}>{n.data.date} · 0 views</span>
+              </div>
+            ))}
+            {notesPreview.length === 0 && <div class="entry__preview-row"><span>暂无笔记</span><span>—</span></div>}
+          </div>
+        </a>
+
+        <a class="entry reveal" href="/share">
+          <span class="entry__index">03 / Share</span>
+          <div class="entry__title">Share <span class="entry__arrow">↗</span></div>
+          <p class="entry__desc">经验与动态分享 —— 时间轴记录，图片瀑布流展示，点击预览。</p>
+          <div class="entry__preview">
+            {sharePreview.map(s => (
+              <div class="entry__preview-row">
+                <span>{s.data.title}</span>
+                <span>{s.data.date}</span>
+              </div>
+            ))}
+            {sharePreview.length === 0 && <div class="entry__preview-row"><span>暂无动态</span><span>—</span></div>}
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import gsap from 'gsap';
+  import { getViewCount } from '../scripts/readingStats';
+
+  /* ---------- 首页预览阅读量补全 ---------- */
+  document.querySelectorAll<HTMLElement>('[data-note-views]').forEach(el => {
+    const id = el.dataset.noteViews;
+    if (!id) return;
+    const views = getViewCount(id);
+    const date = el.textContent?.split('·')[0].trim() || '';
+    el.textContent = `${date} · ${views} views`;
+  });
+
+  /* ---------- Hero 入场动画 ---------- */
+  function heroIntro() {
+    const targets = '[data-hero-avatar],[data-hero-eyebrow],[data-hero-title],[data-hero-tagline],[data-hero-cta]';
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll(targets).forEach(el => { (el as HTMLElement).style.opacity = '1'; });
+      return;
+    }
+    gsap.set(targets, { opacity: 0 });
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.fromTo('[data-hero-avatar]',  { y: -16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 })
+      .fromTo('[data-hero-eyebrow]', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.5')
+      .fromTo('[data-hero-title]',   { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0 }, '-=0.4')
+      .fromTo('[data-hero-tagline]', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, '-=0.6')
+      .fromTo('[data-hero-cta]',     { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, '-=0.5')
+      .fromTo('.hero__scroll',       { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.3');
+  }
+
+  /* ---------- 首屏滚动吸附（hero ↔ sections） ---------- */
+  function bindHeroScrollSnap() {
+    const hero = document.querySelector('.hero');
+    const sections = document.getElementById('sections');
+    if (!hero || !sections) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const sectionsTop = () => sections!.getBoundingClientRect().top + window.scrollY;
+    let locked = false;
+    const lock = (ms: number) => {
+      locked = true;
+      setTimeout(() => { locked = false; }, ms);
+    };
+    const goSections = () => { window.scrollTo({ top: sectionsTop(), behavior: 'smooth' }); lock(900); };
+    const goHero = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); lock(900); };
+    const searchOpen = () => !!(window as any).RS_SEARCH && (window as any).RS_SEARCH.isOpen;
+
+    window.addEventListener('wheel', (e) => {
+      if (locked || searchOpen()) return;
+      const y = window.scrollY;
+      const top = sectionsTop();
+      if (e.deltaY > 8 && y < top - 60) { e.preventDefault(); goSections(); }
+      else if (e.deltaY < -8 && y < top + 60 && y > 30) { e.preventDefault(); goHero(); }
+    }, { passive: false });
+
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchend', (e) => {
+      if (locked || searchOpen()) return;
+      const dy = touchStartY - e.changedTouches[0].clientY;
+      const y = window.scrollY;
+      const top = sectionsTop();
+      if (dy > 50 && y < top - 60) { goSections(); }
+      else if (dy < -50 && y < top + 60 && y > 30) { goHero(); }
+    }, { passive: true });
+
+    document.addEventListener('keydown', (e) => {
+      if (locked || searchOpen()) return;
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const y = window.scrollY;
+      const top = sectionsTop();
+      if ((e.key === 'ArrowDown' || e.key === 'PageDown') && y < top - 60) { e.preventDefault(); goSections(); }
+      else if ((e.key === 'ArrowUp' || e.key === 'PageUp') && y < top + 60 && y > 30) { e.preventDefault(); goHero(); }
+    });
+
+    document.querySelectorAll('a[href="#sections"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!locked) goSections();
+      });
+    });
+  }
+
+  heroIntro();
+  bindHeroScrollSnap();
+</script>

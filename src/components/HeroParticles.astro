@@ -1,0 +1,411 @@
+---
+import { home } from '../config/home';
+const cfg = home.particles;
+const cfgJson = JSON.stringify(cfg);
+---
+<canvas id="particles-canvas" aria-hidden="true"></canvas>
+<canvas class="warp-canvas" aria-hidden="true"></canvas>
+<button class="warp-toggle" type="button" id="warpToggle" aria-label="切换粒子特效" aria-pressed="false" title="切换粒子特效（网络 / 跃迁）">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="1.5" fill="currentColor"/><circle cx="18" cy="6" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="6" cy="18" r="1.5" fill="currentColor"/><circle cx="18" cy="18" r="1.5" fill="currentColor"/><path d="M7.5 6h9M6 7.5l5 3.5M18 7.5l-5 3.5M7.5 18l3.5-5M16.5 18l-3.5-5"/></svg>
+</button>
+<script id="hero-particles-config" type="application/json" set:html={cfgJson} />
+
+<script>
+  import * as THREE from 'three';
+
+  const hero = document.querySelector('.hero') as HTMLElement | null;
+  if (hero) {
+    const configEl = document.getElementById('hero-particles-config');
+    const cfg = configEl ? JSON.parse(configEl.textContent || '{}') : {} as any;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+    /* ============================================================
+       一、Three.js 粒子网络（network 模式）
+       ============================================================ */
+    const networkCanvas = document.getElementById('particles-canvas') as HTMLCanvasElement | null;
+
+    const COUNT = isMobile ? (cfg.countMobile || 26) : (cfg.count || 80);
+    const LINK_NORM = isMobile ? 0 : (cfg.linkDistance != null ? cfg.linkDistance : 0.13);
+    const PARTICLE_SIZE = cfg.size || 2.4;
+    const PARTICLE_OPACITY = cfg.opacity != null ? cfg.opacity : 0.85;
+
+    const THEME_DARK_COLOR = new THREE.Color(cfg.color || '#ffffff');
+    const THEME_LIGHT_COLOR = new THREE.Color(cfg.colorLight || '#111111');
+
+    const getThemeColor = () => document.documentElement.dataset.theme === 'light' ? THEME_LIGHT_COLOR : THEME_DARK_COLOR;
+    const getThemeLineColor = getThemeColor;
+
+    let networkRaf: number | null = null;
+    let networkRunning = false;
+
+    const renderer = networkCanvas ? new THREE.WebGLRenderer({ canvas: networkCanvas, alpha: true, antialias: true }) : null;
+    if (renderer) {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 0);
+    }
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+    camera.position.z = 320;
+
+    const nx = new Float32Array(COUNT);
+    const ny = new Float32Array(COUNT);
+    const nz = new Float32Array(COUNT);
+    const vx = new Float32Array(COUNT);
+    const vy = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      nx[i] = Math.random() * 2 - 1;
+      ny[i] = Math.random() * 2 - 1;
+      nz[i] = Math.random() * 2 - 1;
+      vx[i] = (Math.random() - 0.5) * 0.0011;   // 【可改】粒子漂移速度
+      vy[i] = (Math.random() - 0.5) * 0.0011;
+    }
+
+    const positions = new Float32Array(COUNT * 3);
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    // 圆形粒子贴图
+    const particleCanvas = document.createElement('canvas');
+    particleCanvas.width = 32;
+    particleCanvas.height = 32;
+    const pctx = particleCanvas.getContext('2d')!;
+    const gradient = pctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.3, 'rgba(255,255,255,0.9)');
+    gradient.addColorStop(0.7, 'rgba(255,255,255,0.2)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    pctx.fillStyle = gradient;
+    pctx.fillRect(0, 0, 32, 32);
+    const particleTexture = new THREE.CanvasTexture(particleCanvas);
+
+    const pMat = new THREE.PointsMaterial({
+      map: particleTexture,
+      color: getThemeColor(),
+      size: isMobile ? PARTICLE_SIZE + 0.4 : PARTICLE_SIZE,
+      transparent: true,
+      opacity: PARTICLE_OPACITY,
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending
+    });
+    const points = new THREE.Points(pGeo, pMat);
+    scene.add(points);
+
+    let halfW = 200, halfH = 200;
+    const depth = 140;
+    const margin = 1.12;
+
+    function networkResize() {
+      if (!renderer || !networkCanvas) return;
+      const w = networkCanvas.clientWidth || window.innerWidth;
+      const h = networkCanvas.clientHeight || window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      const vFOV = camera.fov * Math.PI / 180;
+      halfH = Math.tan(vFOV / 2) * camera.position.z;
+      halfW = halfH * camera.aspect;
+    }
+    networkResize();
+
+    // 连线
+    let lineSeg: THREE.LineSegments | null = null;
+    if (LINK_NORM > 0) {
+      const maxLinks = Math.floor(COUNT * (COUNT - 1) / 2);
+      const lineGeo = new THREE.BufferGeometry();
+      const linePositions = new Float32Array(maxLinks * 6);
+      lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+      const lineMat = new THREE.LineBasicMaterial({
+        color: getThemeLineColor(), transparent: true, opacity: 0.15, depthWrite: false
+      });
+      lineSeg = new THREE.LineSegments(lineGeo, lineMat);
+      scene.add(lineSeg);
+    }
+
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    window.addEventListener('mousemove', (e) => {
+      mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    const linkMax2 = (LINK_NORM * 2) * (LINK_NORM * 2);
+
+    function networkTick() {
+      for (let i = 0; i < COUNT; i++) {
+        nx[i] += vx[i];
+        ny[i] += vy[i];
+        if (nx[i] > 1) nx[i] = -1; else if (nx[i] < -1) nx[i] = 1;
+        if (ny[i] > 1) ny[i] = -1; else if (ny[i] < -1) ny[i] = 1;
+
+        positions[i * 3] = nx[i] * halfW * margin;
+        positions[i * 3 + 1] = ny[i] * halfH * margin;
+        positions[i * 3 + 2] = nz[i] * depth;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+
+      if (lineSeg) {
+        const lp = (lineSeg.geometry.attributes.position as THREE.BufferAttribute).array as ArrayLike<number>;
+        let li = 0;
+        for (let i = 0; i < COUNT; i++) {
+          const ax = nx[i], ay = ny[i];
+          for (let j = i + 1; j < COUNT; j++) {
+            const dx = ax - nx[j];
+            const dy = ay - ny[j];
+            if (dx * dx + dy * dy < linkMax2) {
+              const ix = i * 3, jx = j * 3;
+              (lp as number[])[li++] = positions[ix];     (lp as number[])[li++] = positions[ix + 1]; (lp as number[])[li++] = positions[ix + 2];
+              (lp as number[])[li++] = positions[jx];     (lp as number[])[li++] = positions[jx + 1]; (lp as number[])[li++] = positions[jx + 2];
+            }
+          }
+        }
+        lineSeg.geometry.setDrawRange(0, li / 3);
+        (lineSeg.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+      }
+
+      mouse.x += (mouse.tx - mouse.x) * 0.045;
+      mouse.y += (mouse.ty - mouse.y) * 0.045;
+      camera.position.x = mouse.x * halfW * 0.1;
+      camera.position.y = -mouse.y * halfH * 0.1;
+      camera.lookAt(scene.position);
+
+      if (renderer) renderer.render(scene, camera);
+      if (networkRunning) networkRaf = requestAnimationFrame(networkTick);
+    }
+
+    function startNetwork() {
+      if (networkRunning || prefersReducedMotion) return;
+      networkRunning = true;
+      networkRaf = requestAnimationFrame(networkTick);
+    }
+    function stopNetwork() {
+      networkRunning = false;
+      if (networkRaf) { cancelAnimationFrame(networkRaf); networkRaf = null; }
+    }
+
+    /* ============================================================
+       二、Canvas 2D 跃迁星场（warp 模式）
+       ============================================================ */
+    const warpCanvas = hero.querySelector('.warp-canvas') as HTMLCanvasElement | null;
+    const wctx = warpCanvas?.getContext('2d') || null;
+
+    const WARP_CONFIG = {
+      particleCount: 320,       // 【可改】粒子数量
+      zMax: 200,                // 【可改】最大深度
+      zMin: 1,                  // 【可改】最小深度
+      baseSpeed: 0.1,           // 【可改】基础速度
+      sizeScale: 0.02,          // 【可改】线宽缩放
+      perturb: 0.0025,          // 【可改】方向扰动
+      storageKey: 'rs-warp'     // 【可改】localStorage 键名
+    };
+
+    let W = 0, H = 0, cx = 0, cy = 0, focal = 0, dpr = 1;
+    let warpParticles: any[] = [];
+    let warpRaf: number | null = null;
+    let warpRunning = false;
+    let fgColor = '#fafafa';
+
+    function readWarpColor() {
+      const c = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
+      if (c) fgColor = c;
+    }
+    readWarpColor();
+
+    function makeParticle(initial: boolean) {
+      return {
+        x: (Math.random() - 0.5) * 1.6,
+        y: (Math.random() - 0.5) * 1.6,
+        z: initial ? Math.random() * WARP_CONFIG.zMax : WARP_CONFIG.zMax,
+        speed: 0.7 + Math.random() * 0.6,
+        px: 0, py: 0,
+        firstFrame: true
+      };
+    }
+
+    function initWarpParticles() {
+      warpParticles = [];
+      for (let i = 0; i < WARP_CONFIG.particleCount; i++) {
+        warpParticles.push(makeParticle(true));
+      }
+    }
+
+    function warpResize() {
+      if (!warpCanvas) return;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = warpCanvas.clientWidth || hero.clientWidth || window.innerWidth;
+      H = warpCanvas.clientHeight || hero.clientHeight || window.innerHeight;
+      cx = W / 2;
+      cy = H / 2;
+      focal = Math.max(W, H);
+      warpCanvas.width = W * dpr;
+      warpCanvas.height = H * dpr;
+      if (wctx) wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function warpTick() {
+      if (!warpRunning || !wctx) { warpRaf = null; return; }
+
+      wctx.clearRect(0, 0, W, H);
+      wctx.strokeStyle = fgColor;
+      wctx.lineCap = 'round';
+
+      for (let i = 0; i < warpParticles.length; i++) {
+        const p = warpParticles[i];
+        const distFactor = 0.35 + 0.65 * (p.z / WARP_CONFIG.zMax);
+        p.z -= WARP_CONFIG.baseSpeed * p.speed * distFactor;
+        p.x += (Math.random() - 0.5) * WARP_CONFIG.perturb;
+        p.y += (Math.random() - 0.5) * WARP_CONFIG.perturb;
+
+        if (p.z <= WARP_CONFIG.zMin) {
+          Object.assign(p, makeParticle(false));
+          continue;
+        }
+
+        const sx = cx + (p.x / p.z) * focal;
+        const sy = cy + (p.y / p.z) * focal;
+
+        if (p.firstFrame) {
+          p.firstFrame = false;
+          p.px = sx;
+          p.py = sy;
+          continue;
+        }
+
+        const alpha = Math.max(0.05, 1 - p.z / WARP_CONFIG.zMax);
+        const lw = Math.max(0.3, (WARP_CONFIG.zMax / p.z) * WARP_CONFIG.sizeScale);
+
+        wctx.globalAlpha = alpha;
+        wctx.lineWidth = lw;
+        wctx.beginPath();
+        wctx.moveTo(p.px, p.py);
+        wctx.lineTo(sx, sy);
+        wctx.stroke();
+
+        p.px = sx;
+        p.py = sy;
+      }
+
+      wctx.globalAlpha = 1;
+      if (warpRunning) warpRaf = requestAnimationFrame(warpTick);
+    }
+
+    function startWarp() {
+      if (warpRunning || prefersReducedMotion) return;
+      warpRunning = true;
+      warpRaf = requestAnimationFrame(warpTick);
+    }
+    function stopWarp() {
+      warpRunning = false;
+      if (warpRaf) { cancelAnimationFrame(warpRaf); warpRaf = null; }
+    }
+
+    /* ============================================================
+       三、模式状态机 + 切换按钮
+       ============================================================ */
+    let mode: 'network' | 'warp' = 'network';
+    let inViewport = true;
+
+    const ICON_NETWORK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="1.5" fill="currentColor"/><circle cx="18" cy="6" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="6" cy="18" r="1.5" fill="currentColor"/><circle cx="18" cy="18" r="1.5" fill="currentColor"/><path d="M7.5 6h9M6 7.5l5 3.5M18 7.5l-5 3.5M7.5 18l3.5-5M16.5 18l-3.5-5"/></svg>';
+    const ICON_WARP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="1" fill="currentColor"/><path d="M12 12L4 4M12 12l8-4M12 12l-8 8M12 12l8 8M12 12L12 2M12 12v10"/></svg>';
+
+    const toggleBtn = document.getElementById('warpToggle') as HTMLButtonElement | null;
+
+    function updateButton() {
+      if (!toggleBtn) return;
+      if (mode === 'warp') {
+        toggleBtn.classList.add('is-active');
+        toggleBtn.innerHTML = ICON_WARP;
+        toggleBtn.setAttribute('aria-pressed', 'true');
+      } else {
+        toggleBtn.classList.remove('is-active');
+        toggleBtn.innerHTML = ICON_NETWORK;
+        toggleBtn.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    function setMode(next: 'network' | 'warp') {
+      mode = next;
+      if (mode === 'warp') {
+        hero.classList.add('is-warp');
+        if (inViewport) { stopNetwork(); startWarp(); }
+      } else {
+        hero.classList.remove('is-warp');
+        stopWarp();
+        setTimeout(() => {
+          if (mode !== 'warp' && wctx) wctx.clearRect(0, 0, W, H);
+        }, 800);
+        if (inViewport) startNetwork();
+      }
+      try { localStorage.setItem(WARP_CONFIG.storageKey, mode); } catch (e) {}
+      updateButton();
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        setMode(mode === 'warp' ? 'network' : 'warp');
+      });
+    }
+
+    /* ============================================================
+       四、可见性 + 主题 + 响应式
+       ============================================================ */
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          inViewport = e.isIntersecting;
+          if (inViewport) {
+            if (mode === 'warp') startWarp();
+            else startNetwork();
+          } else {
+            stopNetwork();
+            stopWarp();
+          }
+        });
+      });
+      io.observe(hero);
+    } else {
+      startNetwork();
+    }
+
+    // 主题切换：网络粒子/连线颜色 + 跃迁粒子颜色
+    new MutationObserver(() => {
+      const c = getThemeColor();
+      pMat.color.set(c);
+      if (lineSeg) (lineSeg.material as THREE.LineBasicMaterial).color.set(getThemeLineColor());
+      readWarpColor();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    let resizeT: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeT);
+      resizeT = window.setTimeout(() => {
+        networkResize();
+        warpResize();
+      }, 150) as unknown as number;
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { stopNetwork(); stopWarp(); }
+      else if (inViewport) {
+        if (mode === 'warp') startWarp();
+        else startNetwork();
+      }
+    });
+
+    /* ====== 初始化 ====== */
+    warpResize();
+    initWarpParticles();
+
+    // 无障碍：减少动效时隐藏切换按钮
+    if (prefersReducedMotion && toggleBtn) {
+      toggleBtn.style.display = 'none';
+    }
+
+    // 读取持久化状态（默认 network，兼容旧值 'on'）
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(WARP_CONFIG.storageKey); } catch (e) {}
+    setMode(saved === 'warp' || saved === 'on' ? 'warp' : 'network');
+  }
+</script>

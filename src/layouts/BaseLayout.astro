@@ -1,0 +1,47 @@
+---
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import SearchBox from '../components/SearchBox.astro';
+import { site } from '../config/site';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = site.description } = Astro.props;
+
+import '../styles/theme.css';
+import '../styles/typography.css';
+import '../styles/global.css';
+import '../styles/components.css';
+import '../styles/pages.css';
+import '../styles/markdown.css';
+import '../styles/warpParticles.css';
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script is:inline>
+    document.documentElement.dataset.theme = localStorage.getItem('rs-theme') || 'dark';
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+</head>
+<body>
+  <Navbar />
+  <main>
+    <slot />
+  </main>
+  <Footer />
+  <SearchBox />
+</body>
+</html>

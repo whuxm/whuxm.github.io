@@ -1,0 +1,63 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  status: string;
+  date: string;
+  tags: string[];
+  description: string;
+  cover: string;
+  slug: string;
+}
+const { title, status, date, tags, description, cover, slug } = Astro.props;
+
+const STATUS_LABEL: Record<string, string> = {
+  ongoing: '进行中',
+  completed: '已完成',
+  planning: '规划中'
+};
+---
+<BaseLayout title={`${title} · RS NOTES`}>
+  <main class="page">
+    <div class="container">
+      <article class="project">
+        <div class="project-hero">
+          <a class="note-back" href="/research">← Back to Research</a>
+          <span class="eyebrow">{status.toUpperCase()} · {date}</span>
+          <h1>{title}</h1>
+          <p style="margin-top:18px;max-width:640px;font-size:1.05rem;">{description}</p>
+          {cover && (
+            <div class="project-hero__cover">
+              <img src={cover} alt={title} />
+            </div>
+          )}
+          <div class="project-meta">
+            <div class="project-meta__item">
+              <span class="eyebrow">Status</span>
+              <span class="value">{STATUS_LABEL[status] || status}</span>
+            </div>
+            <div class="project-meta__item">
+              <span class="eyebrow">Date</span>
+              <span class="value">{date}</span>
+            </div>
+            <div class="project-meta__item">
+              <span class="eyebrow">Tags</span>
+              <span class="value">{tags.join(' · ') || '—'}</span>
+            </div>
+            <div class="project-meta__item">
+              <span class="eyebrow">ID</span>
+              <span class="value mono">{slug}</span>
+            </div>
+          </div>
+          <div class="card__tags" style="margin-bottom:32px;">
+            {tags.map(t => <span class="tag">{t}</span>)}
+          </div>
+          <div class="markdown">
+            <slot />
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+</BaseLayout>

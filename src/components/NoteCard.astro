@@ -1,0 +1,23 @@
+---
+interface Note {
+  slug: string;
+  data: {
+    title: string;
+    summary: string;
+    tags: string[];
+    date: string;
+  };
+  body: string;
+}
+interface Props { note: Note; }
+const { note } = Astro.props;
+---
+<a class="note-item" href={`/notes/${note.slug}`} data-tags={note.data.tags.join(',')}>
+  <h3 class="note-item__title">{note.data.title}</h3>
+  <p class="note-item__summary">{note.data.summary}</p>
+  <div class="note-item__meta">
+    <span>{note.data.date}</span>
+    {note.data.tags.map(t => <span>#{t}</span>)}
+    <span class="note-views" data-id={note.slug}>· views</span>
+  </div>
+</a>

@@ -1,0 +1,28 @@
+---
+interface ShareItem {
+  slug: string;
+  data: {
+    title: string;
+    date: string;
+    images: string[];
+  };
+  body: string;
+}
+interface Props { item: ShareItem; }
+const { item } = Astro.props;
+---
+<div class="tl-item" id={item.slug}>
+  <div class="tl-date">{item.data.date}</div>
+  <h3 class="tl-title">{item.data.title}</h3>
+  <p class="tl-text">{item.body.trim()}</p>
+  {item.data.images.length > 0 && (
+    <div class="masonry" style="margin-top:20px;">
+      {item.data.images.map((img, i) => (
+        <div class="masonry__item" data-lightbox={img}>
+          <img src={img} alt={`${item.data.title} ${i + 1}`} loading="lazy" />
+          <div class="masonry__cap">{item.data.title}</div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>

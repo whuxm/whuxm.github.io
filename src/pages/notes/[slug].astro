@@ -1,0 +1,89 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+import { countWords, estimateReadingTime } from '../../scripts/readingStats';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes');
+  return notes.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const wordCount = countWords(entry.body);
+const readingTime = estimateReadingTime(entry.body);
+const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+<PostLayout
+  title={entry.data.title}
+  date={entry.data.date}
+  readingTime={readingTime}
+  wordCount={wordCount}
+  slug={entry.slug}
+>
+  <div class="note-detail__content markdown">
+    <Content />
+  </div>
+  {tocHeadings.length > 0 && (
+    <aside class="note-toc">
+      <h4>Contents</h4>
+      <ul>
+        {tocHeadings.map(h => (
+          <li><a class={h.depth === 3 ? 'toc-l3' : ''} href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a></li>
+        ))}
+      </ul>
+    </aside>
+  )}
+</PostLayout>
+
+<script>
+  /* ---------- TOC 滚动高亮 ---------- */
+  const tocLinks = document.querySelectorAll<HTMLAnchorElement>('[data-toc]');
+  const md = document.querySelector('.note-detail__content');
+
+  if (tocLinks.length && md && 'IntersectionObserver' in window) {
+    const byId: Record<string, HTMLAnchorElement> = {};
+    tocLinks.forEach(l => { byId[l.dataset.toc || ''] = l; });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          tocLinks.forEach(l => l.classList.remove('is-active'));
+          const link = byId[e.target.id];
+          if (link) link.classList.add('is-active');
+        }
+      });
+    }, { rootMargin: '-72px 0px -70% 0px' });
+
+    md.querySelectorAll('h2, h3').forEach(h => io.observe(h));
+  }
+
+  /* ---------- 平滑锚点 ---------- */
+  document.querySelectorAll<HTMLAnchorElement>('.note-detail__content a[href^="#"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const href = a.getAttribute('href');
+      if (!href) return;
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        (target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  /* ---------- TOC 链接平滑滚动 ---------- */
+  document.querySelectorAll<HTMLAnchorElement>('.note-toc a[href^="#"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const href = a.getAttribute('href');
+      if (!href) return;
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        (target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>

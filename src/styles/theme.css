@@ -1,0 +1,61 @@
+/* ============================================================
+   RS NOTES · theme.css
+   设计令牌（CSS 变量）—— 全站颜色 / 尺寸 / 字体 / 动效的唯一来源
+   深色为默认主题；在 <html data-theme="light"> 时切换为浅色
+   ============================================================ */
+
+:root {
+  /* 【可改】背景与表面色 */
+  --bg: #0a0a0a;
+  --bg-elevated: #121212;
+  --bg-card: #111111;
+  --bg-deep: #060606;
+  /* 【可改】前景文字色 */
+  --fg: #fafafa;
+  --fg-muted: #9a9a9a;
+  --fg-subtle: #5a5a5a;
+  /* 【可改】边框 */
+  --border: #1f1f1f;
+  --border-bright: #e5e5e5;
+  --accent: #ffffff;
+  --danger: #ff5a5a;
+  /* 背景色的 RGB 三元组（用于 rgba 半透明叠加，随主题联动） */
+  --bg-rgb: 10, 10, 10;
+  --bg-elev-rgb: 18, 18, 18;
+  /* hero 渐变端点与暗角 */
+  --hero-from: #202020;
+  --hero-to: #080808;
+  --vignette: rgba(5, 5, 5, 0.55);
+  /* 噪点叠加强度 */
+  --noise-opacity: 0.035;
+
+  --max-width: 1200px;
+  --nav-height: 68px;
+
+  --radius: 2px;
+  --radius-lg: 4px;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-precise: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 0.4s;
+}
+
+[data-theme="light"] {
+  --bg: #f7f7f5;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-deep: #f0f0f0;
+  --fg: #0a0a0a;
+  --fg-muted: #555555;
+  --fg-subtle: #9a9a9a;
+  --border: #e2e2e2;
+  --border-bright: #1a1a1a;
+  --accent: #000000;
+  --danger: #d64545;
+  --bg-rgb: 247, 247, 245;
+  --bg-elev-rgb: 255, 255, 255;
+  --hero-from: #e6e6e6;
+  --hero-to: #f7f7f5;
+  --vignette: rgba(255, 255, 255, 0.45);
+  --noise-opacity: 0.018;
+}

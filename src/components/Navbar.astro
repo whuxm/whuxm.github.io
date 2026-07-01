@@ -1,0 +1,107 @@
+---
+import { site } from '../config/site';
+import Icon from './Icon.astro';
+
+const pathname = Astro.url.pathname;
+const isActive = (url: string) => {
+  if (url === '/') return pathname === '/';
+  return pathname.startsWith(url);
+};
+
+const currentTheme = 'dark';
+---
+<header class="nav">
+  <div class="nav__inner">
+    <a class="nav__brand" href="/" aria-label={site.siteTitle}>
+      <img src={site.logo} alt="logo" />
+      <span class="nav__brand-text">{site.siteTitle}</span>
+    </a>
+    <nav class="nav__menu" id="navMenu">
+      {site.navItems.map(item => (
+        <a class={`nav__link${isActive(item.url) ? ' is-active' : ''}`} href={item.url}>{item.name}</a>
+      ))}
+    </nav>
+    <div class="nav__spacer"></div>
+    <div class="nav__tools">
+      <button class="icon-btn" id="themeToggle" aria-label="切换主题" title="切换深/浅色">
+        <Icon name="sun" />
+      </button>
+      <button class="icon-btn" id="searchTrigger" aria-label="Search">
+        <Icon name="search" />
+      </button>
+      <button class="icon-btn nav__burger" id="navBurger" aria-label="Menu">
+        <Icon name="burger" />
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  function initNav() {
+    const nav = document.querySelector('.nav');
+    const onScroll = () => {
+      if (nav) nav.classList.toggle('is-scrolled', window.scrollY > 24);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const burger = document.getElementById('navBurger');
+    const menu = document.getElementById('navMenu');
+    if (burger && menu) {
+      burger.addEventListener('click', () => menu.classList.toggle('is-open'));
+    }
+
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+      const sunIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+      const moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      const apply = () => {
+        const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+        const next = current === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('rs-theme', next); } catch (e) {}
+        themeBtn.innerHTML = next === 'light' ? moonIcon : sunIcon;
+        themeBtn.setAttribute('aria-label', next === 'light' ? '切换到深色' : '切换到浅色');
+      };
+      themeBtn.addEventListener('click', apply);
+      const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      themeBtn.innerHTML = current === 'light' ? moonIcon : sunIcon;
+    }
+
+    const trigger = document.getElementById('searchTrigger');
+    if (trigger) {
+      trigger.addEventListener('click', () => {
+        if (window.RS_SEARCH) window.RS_SEARCH.open();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (window.RS_SEARCH && window.RS_SEARCH.isOpen) return;
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          window.RS_SEARCH && window.RS_SEARCH.open();
+        } else if (e.key === '/' && document.activeElement === document.body) {
+          e.preventDefault();
+          window.RS_SEARCH && window.RS_SEARCH.open();
+        }
+      });
+    }
+
+    const reveals = document.querySelectorAll('.reveal:not(.is-in)');
+    if (reveals.length) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => entry.target.classList.add('is-in'), i * 60);
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      reveals.forEach((el) => io.observe(el));
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNav);
+  } else {
+    initNav();
+  }
+</script>

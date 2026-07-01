@@ -1,0 +1,88 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ShareCard from '../../components/ShareCard.astro';
+
+const share = (await getCollection('share')).sort(
+  (a, b) => (b.data.date || '').localeCompare(a.data.date || '')
+);
+---
+<BaseLayout title="Share · RS NOTES" description="经验与动态分享 —— 时间轴 + 图片瀑布流。">
+  <main class="page">
+    <div class="container">
+      <div class="page-head reveal">
+        <span class="eyebrow">03 / Share</span>
+        <h1>分享与动态</h1>
+        <p>时间轴记录日常动态，图片瀑布流展示瞬间。点击图片查看大图。</p>
+      </div>
+
+      <div class="share-layout">
+        <input class="share-search" type="text" id="shareSearch" placeholder="搜索动态标题或内容…" />
+
+        <div class="timeline" data-timeline>
+          {share.map(entry => (
+            <div data-title={entry.data.title} data-text={entry.body}>
+              <ShareCard item={entry} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox__close" id="lightboxClose">×</span>
+    <img id="lightboxImg" src="" alt="preview" />
+    <div class="lightbox__caption" id="lightboxCaption"></div>
+  </div>
+</BaseLayout>
+
+<script>
+  /* ---------- 搜索筛选 ---------- */
+  const input = document.getElementById('shareSearch') as HTMLInputElement | null;
+  const items = Array.from(document.querySelectorAll<HTMLElement>('[data-timeline] [data-title]'));
+
+  if (input) {
+    let t: number;
+    input.addEventListener('input', () => {
+      clearTimeout(t);
+      t = window.setTimeout(() => {
+        const q = input.value.trim().toLowerCase();
+        items.forEach(item => {
+          const title = (item.dataset.title || '').toLowerCase();
+          const text = (item.dataset.text || '').toLowerCase();
+          item.style.display = (!q || title.includes(q) || text.includes(q)) ? '' : 'none';
+        });
+      }, 150) as unknown as number;
+    });
+  }
+
+  /* ---------- 灯箱 ---------- */
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightboxImg') as HTMLImageElement | null;
+  const lbCap = document.getElementById('lightboxCaption');
+  const lbClose = document.getElementById('lightboxClose');
+
+  const timeline = document.querySelector('[data-timeline]');
+  timeline?.addEventListener('click', (e) => {
+    const item = (e.target as HTMLElement).closest('[data-lightbox]') as HTMLElement | null;
+    if (!item || !lb || !lbImg) return;
+    const src = item.dataset.lightbox;
+    if (!src) return;
+    lbImg.src = src;
+    if (lbCap) lbCap.textContent = item.querySelector('.masonry__cap')?.textContent || '';
+    lb.classList.add('is-open');
+  });
+
+  const close = () => lb?.classList.remove('is-open');
+  lbClose?.addEventListener('click', close);
+  lb?.addEventListener('click', (e) => { if (e.target === lb) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+  /* ---------- 锚点跳转 ---------- */
+  const hash = location.hash.replace('#', '');
+  if (hash) {
+    const el = document.getElementById(hash);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }
+</script>

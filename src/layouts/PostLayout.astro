@@ -1,0 +1,44 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  date: string;
+  readingTime: number;
+  wordCount: number;
+  slug: string;
+}
+const { title, date, readingTime, wordCount, slug } = Astro.props;
+---
+<BaseLayout title={`${title} · RS NOTES`}>
+  <article class="note-detail" data-slug={slug}>
+    <div class="container">
+      <a class="note-back" href="/notes">← Back to Notes</a>
+      <div class="note-detail__header">
+        <span class="eyebrow">{date}</span>
+        <h1 class="note-detail__title">{title}</h1>
+        <div class="note-detail__meta">
+          <span>📅 {date}</span>
+          <span class="note-views" data-id={slug}>👁 0 views</span>
+          <span>⏱ 约 {readingTime} 分钟阅读</span>
+          <span>📝 {wordCount} 字</span>
+        </div>
+      </div>
+      <div class="note-detail__body">
+        <slot />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<script>
+  import { recordView } from '../scripts/readingStats';
+
+  const article = document.querySelector<HTMLElement>('.note-detail[data-slug]');
+  const slug = article?.dataset.slug;
+  if (slug) {
+    const count = recordView(slug);
+    const el = document.querySelector<HTMLElement>(`.note-views[data-id="${slug}"]`);
+    if (el) el.textContent = `👁 ${count} views`;
+  }
+</script>

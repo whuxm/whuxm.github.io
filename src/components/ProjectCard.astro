@@ -1,0 +1,34 @@
+---
+interface Project {
+  slug: string;
+  data: {
+    title: string;
+    description: string;
+    cover: string;
+    tags: string[];
+    status: string;
+    date: string;
+  };
+}
+interface Props { project: Project; }
+const { project } = Astro.props;
+const statusLabel: Record<string, string> = { ongoing: 'Ongoing', completed: 'Completed', planning: 'Planning' };
+---
+<a class="card" href={`/research/${project.slug}`}>
+  <div class="card__cover">
+    <img src={project.data.cover} alt={project.data.title} loading="lazy" />
+    <span class={`status card__corner status--${project.data.status}`}>
+      <span class="status__dot"></span>{statusLabel[project.data.status] || project.data.status}
+    </span>
+  </div>
+  <div class="card__body">
+    <div class="card__meta">
+      <span class="card__date">{project.data.date}</span>
+    </div>
+    <h3 class="card__title">{project.data.title}</h3>
+    <p class="card__intro">{project.data.description}</p>
+    <div class="card__tags">
+      {project.data.tags.map(t => <span class="tag">{t}</span>)}
+    </div>
+  </div>
+</a>

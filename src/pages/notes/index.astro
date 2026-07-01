@@ -1,0 +1,100 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NoteCard from '../../components/NoteCard.astro';
+
+const notes = (await getCollection('notes')).sort(
+  (a, b) => (b.data.date || '').localeCompare(a.data.date || '')
+);
+
+// 构建 tag → count 映射
+const tagMap: Record<string, number> = {};
+notes.forEach(n => n.data.tags.forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }));
+const tagEntries = Object.entries(tagMap).sort((a, b) => b[1] - a[1]);
+---
+<BaseLayout title="Notes · RS NOTES" description="技术笔记与知识沉淀 —— Markdown、数学公式、代码高亮。">
+  <main class="page">
+    <div class="container">
+      <div class="page-head reveal">
+        <span class="eyebrow">02 / Notes</span>
+        <h1>技术笔记</h1>
+        <p>知识的沉淀 —— 支持标签筛选、搜索与阅读统计。点击标题进入阅读。</p>
+      </div>
+
+      <div class="notes-layout">
+        <aside class="notes-sidebar reveal">
+          <input class="notes-search" type="text" id="notesSearch" placeholder="搜索笔记标题或摘要…" />
+          <h4>Tags</h4>
+          <div class="tagcloud" data-tagcloud>
+            <button class="tag is-active" data-tag="all">全部<span class="tagcloud__count">{notes.length}</span></button>
+            {tagEntries.map(([tag, count]) => (
+              <button class="tag" data-tag={tag}>{tag}<span class="tagcloud__count">{count}</span></button>
+            ))}
+          </div>
+        </aside>
+
+        <section class="notes-list" data-notes-list>
+          {notes.map(entry => (
+            <div data-tags={entry.data.tags.join(',')}>
+              <NoteCard note={entry} />
+            </div>
+          ))}
+        </section>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { getViewCount } from '../../scripts/readingStats';
+
+  /* ---------- 阅读量补全 ---------- */
+  document.querySelectorAll<HTMLElement>('.note-views[data-id]').forEach(el => {
+    const id = el.dataset.id;
+    if (!id) return;
+    const views = getViewCount(id);
+    el.textContent = `· ${views} views`;
+  });
+
+  /* ---------- 标签 + 搜索筛选 ---------- */
+  let activeTag = 'all';
+  let activeQuery = '';
+
+  const cloud = document.querySelector('[data-tagcloud]');
+  const search = document.getElementById('notesSearch') as HTMLInputElement | null;
+  const items = Array.from(document.querySelectorAll<HTMLElement>('[data-notes-list] [data-tags]'));
+
+  function applyFilter() {
+    const q = activeQuery.toLowerCase();
+    items.forEach(item => {
+      const tags = (item.dataset.tags || '').split(',');
+      const titleEl = item.querySelector('.note-item__title');
+      const summaryEl = item.querySelector('.note-item__summary');
+      const title = titleEl?.textContent || '';
+      const summary = summaryEl?.textContent || '';
+      const tagMatch = activeTag === 'all' || tags.includes(activeTag);
+      const queryMatch = !q || title.toLowerCase().includes(q) || summary.toLowerCase().includes(q) || tags.some(t => t.toLowerCase().includes(q));
+      item.style.display = (tagMatch && queryMatch) ? '' : 'none';
+    });
+  }
+
+  cloud?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-tag]');
+    if (!btn) return;
+    cloud.querySelectorAll('.tag').forEach(t => t.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    activeTag = btn.dataset.tag || 'all';
+    applyFilter();
+  });
+
+  if (search) {
+    let t: number;
+    search.addEventListener('input', () => {
+      clearTimeout(t);
+      t = window.setTimeout(() => {
+        activeQuery = search.value.trim();
+        applyFilter();
+      }, 150) as unknown as number;
+    });
+  }
+</script>

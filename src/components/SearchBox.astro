@@ -1,0 +1,129 @@
+---
+---
+<div class="search" id="searchBox" role="dialog" aria-modal="false">
+  <div class="search__bar">
+    <div class="search__input-wrap">
+      <span class="search__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </span>
+      <input class="search__input" type="text" placeholder="搜索科研 / 笔记 / 分享…" autocomplete="off" spellcheck="false" />
+      <span class="search__close" id="searchClose">ESC</span>
+    </div>
+  </div>
+  <div class="search__results" id="searchResults"></div>
+</div>
+
+<script>
+  const SEARCH = {
+    isOpen: false,
+    data: { research: [], notes: [], share: [] },
+    loaded: false,
+    el: null as HTMLElement | null,
+    input: null as HTMLInputElement | null,
+    results: null as HTMLElement | null,
+
+    init() {
+      this.el = document.getElementById('searchBox');
+      this.input = this.el?.querySelector('.search__input') || null;
+      this.results = document.getElementById('searchResults');
+      if (!this.input || !this.results) return;
+
+      let debounceTimer: number;
+      this.input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = window.setTimeout(() => this.filter(this.input!.value), 120);
+      });
+
+      this.el?.querySelector('#searchClose')?.addEventListener('click', () => this.close());
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isOpen) { e.preventDefault(); this.close(); }
+      });
+      this.el?.querySelector('.search__bar')?.addEventListener('click', (e) => {
+        if (e.target === this.el?.querySelector('.search__bar')) this.close();
+      });
+    },
+
+    async ensureData() {
+      if (this.loaded) return;
+      this.loaded = true;
+      try {
+        const res = await fetch('/search-index.json');
+        if (res.ok) {
+          this.data = await res.json();
+        }
+      } catch (e) {
+        console.warn('[Search] fetch failed:', e);
+      }
+    },
+
+    open() {
+      if (!this.el) this.init();
+      if (!this.el) return;
+      this.isOpen = true;
+      this.el.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => this.input?.focus(), 280);
+      this.ensureData();
+    },
+
+    close() {
+      this.isOpen = false;
+      this.el?.classList.remove('is-open');
+      document.body.style.overflow = '';
+      if (this.input) this.input.value = '';
+      setTimeout(() => { if (!this.isOpen && this.results) this.results.innerHTML = ''; }, 320);
+    },
+
+    escape(s: string): string {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    },
+
+    highlight(text: string, query: string): string {
+      if (!query) return this.escape(text);
+      const escaped = this.escape(text);
+      const q = this.escape(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return escaped.replace(new RegExp(`(${q})`, 'ig'), '<mark>$1</mark>');
+    },
+
+    filter(query: string) {
+      if (!this.results) return;
+      const q = (query || '').trim().toLowerCase();
+      if (!q) { this.results.innerHTML = ''; return; }
+      const all = [...this.data.research, ...this.data.notes, ...this.data.share];
+      const matches = all.filter(item =>
+        (item.title && item.title.toLowerCase().includes(q)) ||
+        (item.snippet && item.snippet.toLowerCase().includes(q)) ||
+        (item.tags && item.tags.join(' ').toLowerCase().includes(q))
+      ).slice(0, 24);
+
+      if (!matches.length) {
+        this.results.innerHTML = `<div class="search__empty">未找到与 "${this.escape(q)}" 相关的内容</div>`;
+        return;
+      }
+
+      const groups: Record<string, any[]> = { research: [], notes: [], share: [] };
+      matches.forEach(m => groups[m.type].push(m));
+      const labels: Record<string, string> = { research: 'Research · 科研', notes: 'Notes · 笔记', share: 'Share · 分享' };
+
+      let html = '';
+      for (const key of ['research', 'notes', 'share']) {
+        if (!groups[key].length) continue;
+        html += `<div class="search__group"><div class="search__group-label">${labels[key]}</div>`;
+        html += groups[key].map(m => `
+          <a class="search__item" href="${m.url}">
+            <span class="search__item-title">${this.highlight(m.title, q)}</span>
+            ${m.snippet ? `<span class="search__item-snippet">${this.highlight(m.snippet.slice(0, 90), q)}</span>` : ''}
+          </a>`).join('');
+        html += `</div>`;
+      }
+      this.results.innerHTML = html;
+    }
+  };
+
+  window.RS_SEARCH = SEARCH;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => SEARCH.init());
+  } else {
+    SEARCH.init();
+  }
+</script>
