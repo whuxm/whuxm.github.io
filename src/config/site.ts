@@ -13,7 +13,7 @@ export const site: SiteConfig = {
   siteTitle: 'RS NOTES',
   subtitle: 'Research · Notes · Share',
   description: '科研工作者的个人知识管理系统',
-  logo: '/logo.svg',
+  logo: '/favicon.svg',
   avatar: '/avatar.svg',
   author: {
     name: 'RS',

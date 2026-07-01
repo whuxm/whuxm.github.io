@@ -29,16 +29,49 @@ const { title, date, readingTime, wordCount, slug } = Astro.props;
       </div>
     </div>
   </article>
+
+  <div class="lightbox" id="noteLightbox">
+    <span class="lightbox__close" id="noteLightboxClose">×</span>
+    <img id="noteLightboxImg" src="" alt="" />
+    <div class="lightbox__caption" id="noteLightboxCaption"></div>
+  </div>
 </BaseLayout>
 
 <script>
-  import { recordView } from '../scripts/readingStats';
+  import { updateViews } from '../scripts/readingStats';
 
   const article = document.querySelector<HTMLElement>('.note-detail[data-slug]');
   const slug = article?.dataset.slug;
   if (slug) {
-    const count = recordView(slug);
     const el = document.querySelector<HTMLElement>(`.note-views[data-id="${slug}"]`);
-    if (el) el.textContent = `👁 ${count} views`;
+    updateViews(slug).then(count => {
+      if (el) el.textContent = `👁 ${count} views`;
+    });
   }
+
+  /* ---------- 图片灯箱 ---------- */
+  const lb = document.getElementById('noteLightbox');
+  const lbImg = document.getElementById('noteLightboxImg') as HTMLImageElement | null;
+  const lbCap = document.getElementById('noteLightboxCaption');
+  const lbClose = document.getElementById('noteLightboxClose');
+
+  const closeLb = () => {
+    lb?.classList.remove('is-open');
+    document.body.style.overflow = '';
+  };
+  const openLb = (src: string, alt: string) => {
+    if (!lb || !lbImg) return;
+    lbImg.src = src;
+    lbImg.alt = alt;
+    if (lbCap) lbCap.textContent = alt;
+    lb.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  document.querySelectorAll<HTMLImageElement>('.note-detail__content img').forEach(img => {
+    img.addEventListener('click', () => openLb(img.currentSrc || img.src, img.alt));
+  });
+  lbClose?.addEventListener('click', closeLb);
+  lb?.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLb(); });
 </script>

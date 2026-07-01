@@ -7,7 +7,11 @@ const research = (await getCollection('research')).sort(
   (a, b) => (b.data.date || '').localeCompare(a.data.date || '')
 );
 ---
-<BaseLayout title="Research · RS NOTES" description="科研项目墙 —— 研究项目展示与归档。">
+<BaseLayout
+  title="Research · RS NOTES"
+  description="科研项目墙 —— 研究项目展示与归档。"
+  background={{ image: '/background1.png', opacity: 0.22, overlay: true }}
+>
   <main class="page">
     <div class="container">
       <div class="page-head reveal">

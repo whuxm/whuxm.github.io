@@ -16,3 +16,8 @@ npm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# secrets
+.env
+.env.*
+!.env.example

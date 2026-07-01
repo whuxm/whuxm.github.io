@@ -36,7 +36,7 @@
 
 .markdown hr { border: none; border-top: 1px solid var(--border); margin: 2.4em 0; }
 
-.markdown img { border: 1px solid var(--border); margin: 1.4em auto; }
+.markdown img { max-width: 100%; height: auto; border: 1px solid var(--border); margin: 1.4em auto; cursor: zoom-in; }
 
 /* 行内代码 */
 .markdown code {

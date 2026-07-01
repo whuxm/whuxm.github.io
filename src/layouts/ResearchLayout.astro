@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<string, string> = {
 <BaseLayout title={`${title} · RS NOTES`}>
   <main class="page">
     <div class="container">
-      <article class="project">
+      <article class="project" data-slug={slug}>
         <div class="project-hero">
           <a class="note-back" href="/research">← Back to Research</a>
           <span class="eyebrow">{status.toUpperCase()} · {date}</span>
@@ -49,6 +49,10 @@ const STATUS_LABEL: Record<string, string> = {
               <span class="eyebrow">ID</span>
               <span class="value mono">{slug}</span>
             </div>
+            <div class="project-meta__item">
+              <span class="eyebrow">Views</span>
+              <span class="value mono research-views" data-id={slug}>—</span>
+            </div>
           </div>
           <div class="card__tags" style="margin-bottom:32px;">
             {tags.map(t => <span class="tag">{t}</span>)}
@@ -61,3 +65,16 @@ const STATUS_LABEL: Record<string, string> = {
     </div>
   </main>
 </BaseLayout>
+
+<script>
+  import { updateViews } from '../scripts/readingStats';
+
+  const article = document.querySelector<HTMLElement>('.project[data-slug]');
+  const slug = article?.dataset.slug;
+  if (slug) {
+    const el = document.querySelector<HTMLElement>(`.research-views[data-id="${slug}"]`);
+    updateViews(slug).then(count => {
+      if (el) el.textContent = `${count}`;
+    });
+  }
+</script>

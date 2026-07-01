@@ -12,7 +12,11 @@ const tagMap: Record<string, number> = {};
 notes.forEach(n => n.data.tags.forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }));
 const tagEntries = Object.entries(tagMap).sort((a, b) => b[1] - a[1]);
 ---
-<BaseLayout title="Notes · RS NOTES" description="技术笔记与知识沉淀 —— Markdown、数学公式、代码高亮。">
+<BaseLayout
+  title="Notes · RS NOTES"
+  description="技术笔记与知识沉淀 —— Markdown、数学公式、代码高亮。"
+  background={{ image: '/background.png', opacity: 0.22, overlay: true }}
+>
   <main class="page">
     <div class="container">
       <div class="page-head reveal">

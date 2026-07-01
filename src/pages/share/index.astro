@@ -7,7 +7,11 @@ const share = (await getCollection('share')).sort(
   (a, b) => (b.data.date || '').localeCompare(a.data.date || '')
 );
 ---
-<BaseLayout title="Share · RS NOTES" description="经验与动态分享 —— 时间轴 + 图片瀑布流。">
+<BaseLayout
+  title="Share · RS NOTES"
+  description="经验与动态分享 —— 时间轴 + 图片瀑布流。"
+  background={{ image: '/background.png', opacity: 0.22, overlay: true }}
+>
   <main class="page">
     <div class="container">
       <div class="page-head reveal">

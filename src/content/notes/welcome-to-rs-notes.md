@@ -1,7 +1,7 @@
 ---
 title: 欢迎来到 RS NOTES
 summary: RS NOTES 是一个面向科研与开发者的个人知识库 —— 介绍它的设计理念与三大模块。
-tags: [about, guide]
+tags: [基础]
 date: 2026-06-28
 ---
 

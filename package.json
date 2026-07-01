@@ -10,15 +10,16 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.0.0",
     "@astrojs/mdx": "^4.0.0",
-    "remark-math": "^6.0.0",
+    "astro": "^5.0.0",
+    "firebase": "^12.15.0",
+    "gsap": "^3.12.5",
     "rehype-katex": "^7.0.0",
-    "three": "^0.160.0",
-    "gsap": "^3.12.5"
+    "remark-math": "^6.0.0",
+    "three": "^0.160.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.0",
-    "@types/three": "^0.160.0"
+    "@types/three": "^0.160.0",
+    "typescript": "^5.3.0"
   }
 }

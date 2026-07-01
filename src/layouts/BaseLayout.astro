@@ -7,8 +7,14 @@ import { site } from '../config/site';
 interface Props {
   title: string;
   description?: string;
+  background?: {
+    image: string;
+    opacity?: number;
+    blur?: number;
+    overlay?: boolean;
+  };
 }
-const { title, description = site.description } = Astro.props;
+const { title, description = site.description, background } = Astro.props;
 
 import '../styles/theme.css';
 import '../styles/typography.css';
@@ -26,7 +32,7 @@ import '../styles/warpParticles.css';
   <script is:inline>
     document.documentElement.dataset.theme = localStorage.getItem('rs-theme') || 'dark';
   </script>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <title>{title}</title>
   <meta name="description" content={description} />
 
@@ -37,6 +43,12 @@ import '../styles/warpParticles.css';
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
 </head>
 <body>
+  {background?.image && (
+    <div class="page-bg" aria-hidden="true">
+      <div class="page-bg__img" style={`background-image:url('${background.image}');opacity:${background.opacity ?? 0.25};${background.blur ? `filter:blur(${background.blur}px)` : ''}`}></div>
+      {background.overlay !== false && <div class="page-bg__overlay"></div>}
+    </div>
+  )}
   <Navbar />
   <main>
     <slot />
