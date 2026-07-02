@@ -1,7 +1,7 @@
 ---
     title: 关于astro架构发布到Github Pages的注意事项
     summary: 本内容将记录关于在更改astro架构并在GitHub pages进行转型过程遇到的问题
-    tags: [踩过的坑，astro]
+    tags: [踩过的坑, astro]
     date: 2026-07-03
 ---
 
